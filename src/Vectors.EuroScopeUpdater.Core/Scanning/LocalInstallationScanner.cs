@@ -33,13 +33,20 @@ public sealed class LocalInstallationScanner : ILocalInstallationScanner
         if (!hasSct)
             return new LocalFirState(firCode, InstallStatus.InstallationIncomplete, null, false, Array.Empty<string>());
 
+        // The versioned .sct that EuroScope actually loads is the ground truth for what is installed.
+        // A manifest is only trustworthy when it agrees with the files on disk; if it does not
+        // (an interrupted install, a manual change, files replaced outside the app), the manifest is
+        // stale and must not drive the reported version or the "modified files" comparison.
+        var fileAirac = SectorFiles.InferInstalledAirac(firDirectory);
         var manifest = _manifest.Read(firCode);
-        AiracCycle? installedAirac =
-            (manifest is not null && manifest.TryGetAirac(out var mAirac)) ? mAirac
-            : SectorFiles.InferInstalledAirac(firDirectory);
+        var manifestAirac = (manifest is not null && manifest.TryGetAirac(out var mAirac)) ? mAirac : (AiracCycle?)null;
+        var manifestMatchesDisk = manifest is not null && fileAirac is not null
+            && manifestAirac is not null && manifestAirac.Value == fileAirac.Value;
 
-        var modifiedCore = manifest is not null
-            ? DetectModifiedCoreFiles(manifest, firDirectory, ct)
+        AiracCycle? installedAirac = fileAirac ?? manifestAirac;
+
+        var modifiedCore = manifestMatchesDisk
+            ? DetectModifiedCoreFiles(manifest!, firDirectory, ct)
             : Array.Empty<string>();
 
         var latestRemote = LatestRemote(catalog, firCode);
@@ -59,7 +66,7 @@ public sealed class LocalInstallationScanner : ILocalInstallationScanner
         return State(InstallStatus.InstalledVersionUnknown);
 
         LocalFirState State(InstallStatus s, IReadOnlyList<string>? mods = null) =>
-            new(firCode, s, installedAirac, manifest is not null, mods ?? Array.Empty<string>());
+            new(firCode, s, installedAirac, manifestMatchesDisk, mods ?? Array.Empty<string>());
     }
 
     private static IReadOnlyList<string> DetectModifiedCoreFiles(LocalManifest manifest, string firDir, CancellationToken ct)
