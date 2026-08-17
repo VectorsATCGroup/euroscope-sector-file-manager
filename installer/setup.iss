@@ -57,6 +57,11 @@ Source: "redist\MicrosoftEdgeWebview2Setup.exe"; DestDir: "{tmp}"; Flags: dontco
 Name: "{group}\{#AppShortName}"; Filename: "{app}\{#AppExe}"
 Name: "{userdesktop}\{#AppShortName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
+[UninstallDelete]
+; Fully remove the program folder (the uninstaller runs from inside it) and its parent if empty.
+Type: filesandordirs; Name: "{app}"
+Type: dirifempty; Name: "{localappdata}\Programs\Vectors ATC Group"
+
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "Launch {#AppShortName}"; Flags: nowait postinstall skipifsilent
 
@@ -200,7 +205,7 @@ end;
 // ── Uninstall removes everything, including the local app data folder ─────────
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
-  dataDir, parentDir: String;
+  dataDir, legacyDir, parentDir: String;
 begin
   if CurUninstallStep = usPostUninstall then
   begin
@@ -208,6 +213,10 @@ begin
     dataDir := ExpandConstant('{localappdata}\VectorsATCGroup\EuroScopeSectorFileManager');
     if DirExists(dataDir) then
       DelTree(dataDir, True, True, True);
+    // Legacy data folder from the pre-rename "EuroScope Updater" identity, if present.
+    legacyDir := ExpandConstant('{localappdata}\VectorsATCGroup\EuroScopeUpdater');
+    if DirExists(legacyDir) then
+      DelTree(legacyDir, True, True, True);
     // Remove the VectorsATCGroup parent folder only if nothing else remains in it.
     parentDir := ExpandConstant('{localappdata}\VectorsATCGroup');
     if DirExists(parentDir) then
