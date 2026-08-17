@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Vectors ATC Group — LIGHT theme (light surfaces + emerald accent). -->
+    <SolidColorBrush x:Key="BgBrush" Color="#FAFBFD" />
+    <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ElevatedBrush" Color="#EEF3F8" />
+    <SolidColorBrush x:Key="SecondaryBrush" Color="#EEF3F8" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#DAE2EC" />
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#178C65" />
+    <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#12724F" />
+    <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ForegroundBrush" Color="#0F1729" />
+    <SolidColorBrush x:Key="MutedBrush" Color="#5A687C" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#BA7908" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#C52020" />
+    <SolidColorBrush x:Key="RadarBlipBrush" Color="#059669" />
+    <SolidColorBrush x:Key="OverlayBrush" Color="#66101826" />
+
+    <!-- Black-text logo (for light backgrounds). -->
+    <BitmapImage x:Key="LogoSource" UriSource="pack://application:,,,/Assets/vectors-logo-white.png" />
+</ResourceDictionary>

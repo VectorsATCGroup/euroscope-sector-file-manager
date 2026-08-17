@@ -1,0 +1,58 @@
+name: Bug report
+description: Report something that is not working correctly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please do not include passwords, cookies, or any personal data in this report.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: A clear description of the problem.
+      placeholder: When I click Update on SBRE, the progress bar stays at 0 percent and nothing happens.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the app
+        2. Authenticate
+        3. Click Update on SBRE
+        4. See the error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: See Help, About in the app, or the installer file name.
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 23H2
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        If available, attach the log from %LOCALAPPDATA%\VectorsATCGroup\EuroScopeSectorFileManager\logs.
+        Please review it first and remove anything sensitive. The app is designed not to log secrets, but review before posting.
+      render: text
+    validations:
+      required: false

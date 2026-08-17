@@ -1,0 +1,89 @@
+﻿================================================================================
+ VECTORS ATC GROUP, EUROSCOPE SECTOR FILE MANAGER
+ Termos de Uso e Privacidade / Usage and Privacy Terms
+================================================================================
+
+ Este documento descreve os termos de USO e a política de PRIVACIDADE do
+ aplicativo, exibidos durante a instalação. A LICENÇA DE CÓDIGO do projeto é a
+ Apache License 2.0 (veja o arquivo LICENSE).
+
+ This document describes the app USAGE terms and PRIVACY policy, shown during
+ installation. The project SOURCE CODE LICENSE is the Apache License 2.0 (see the
+ LICENSE file).
+
+--------------------------------------------------------------------------------
+ PORTUGUÊS
+--------------------------------------------------------------------------------
+
+1. SOFTWARE LIVRE E GRATUITO
+   O Vectors ATC Group EuroScope Sector File Manager é um software livre, gratuito e sem fins
+   lucrativos, desenvolvido e oferecido pelo Vectors ATC Group, um grupo
+   independente de controladores virtuais da VATSIM. Você pode usá-lo livremente,
+   sem qualquer custo, chave de ativação ou assinatura.
+
+2. PRIVACIDADE, NENHUMA COLETA DE DADOS
+   Este software NÃO coleta credenciais nem dados pessoais.
+   - Não há telemetria, analytics ou publicidade de qualquer tipo.
+   - A autenticação é feita exclusivamente nas páginas oficiais do AeroNav,
+     VATSIM e Navigraph. O aplicativo NUNCA vê, digita, recebe ou armazena a sua
+     senha. Você digita suas credenciais somente nessas páginas oficiais.
+   - Apenas configurações técnicas são armazenadas localmente no seu computador
+     (caminhos de instalação, versões instaladas, tema e idioma).
+   - A sessão do AeroNav (cookies) é mantida em um perfil de navegador isolado,
+     separado do seu navegador, apenas para evitar novo login a cada abertura.
+   - Nenhum dado é enviado para servidores do Vectors ATC Group.
+
+3. ARQUIVOS DO AERONAV
+   Os Sector Files permanecem hospedados e distribuídos pelo provedor oficial
+   (AeroNav). Este software apenas facilita o download e a instalação a partir da
+   origem oficial, sem redistribuir, hospedar ou modificar tais arquivos.
+
+4. MARCAS
+   VATSIM, Navigraph, AeroNav e EuroScope são marcas de seus respectivos donos.
+   Este projeto não é afiliado a eles e apenas utiliza seus serviços oficiais.
+
+5. ISENÇÃO DE GARANTIA
+   O software é fornecido "COMO ESTÁ", sem garantias de qualquer tipo. O uso é de
+   sua responsabilidade. Ainda assim, o aplicativo cria backups automáticos antes
+   de qualquer alteração nos seus Sector Files.
+
+--------------------------------------------------------------------------------
+ ENGLISH
+--------------------------------------------------------------------------------
+
+1. FREE SOFTWARE
+   Vectors ATC Group EuroScope Sector File Manager is free, non-commercial software developed
+   and offered by Vectors ATC Group, an independent group of VATSIM virtual
+   controllers. You may use it freely, at no cost, with no activation key or
+   subscription.
+
+2. PRIVACY, NO DATA COLLECTION
+   This software does NOT collect credentials or personal data.
+   - No telemetry, analytics, or advertising of any kind.
+   - Authentication happens exclusively on the official AeroNav, VATSIM and
+     Navigraph pages. The app NEVER sees, types, receives, or stores your
+     password. You enter your credentials only on those official pages.
+   - Only technical settings are stored locally on your computer (installation
+     paths, installed versions, theme and language).
+   - The AeroNav session (cookies) is kept in an isolated browser profile,
+     separate from your own browser, only to avoid signing in on every launch.
+   - No data is ever sent to any Vectors ATC Group server.
+
+3. AERONAV FILES
+   Sector Files remain hosted and distributed by their official provider
+   (AeroNav). This software only helps you download and install from the official
+   source; it never redistributes, hosts, or modifies those files.
+
+4. TRADEMARKS
+   VATSIM, Navigraph, AeroNav and EuroScope are trademarks of their respective
+   owners. This project is not affiliated with them and only uses their official
+   services.
+
+5. NO WARRANTY
+   The software is provided "AS IS", without warranty of any kind. Use is at your
+   own risk. Even so, the app creates automatic backups before making any change
+   to your Sector Files.
+
+================================================================================
+ © Vectors ATC Group, https://vectorsatcgroup.com/
+================================================================================

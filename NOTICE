@@ -1,0 +1,15 @@
+Vectors ATC Group, EuroScope Sector File Manager
+Copyright 2026 Vectors ATC Group
+
+This product is licensed under the Apache License, Version 2.0 (see the LICENSE
+file). The usage and privacy terms shown during installation are in TERMS.txt.
+
+This software is developed and offered by Vectors ATC Group, an independent group
+of VATSIM virtual controllers. It is not affiliated with VATSIM, AeroNav,
+Navigraph, or EuroScope. Those names are trademarks of their respective owners and
+are used only to describe the official services this tool interacts with.
+
+Sector Files remain hosted and distributed by their official provider (AeroNav).
+This software only helps download and install them from the official source. It
+never redistributes, hosts, or modifies those files, and no AeroNav content is
+included in this repository.

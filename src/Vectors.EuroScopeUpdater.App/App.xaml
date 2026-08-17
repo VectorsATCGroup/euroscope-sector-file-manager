@@ -1,0 +1,21 @@
+<Application x:Class="Vectors.EuroScopeUpdater.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="clr-namespace:Vectors.EuroScopeUpdater.App.Views">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Index 0 = active theme; swapped at runtime by ThemeService. Dark is the default. -->
+                <ResourceDictionary Source="Theme/Dark.xaml" />
+                <ResourceDictionary Source="Theme/VectorsTheme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Converters at application scope so every view can resolve them. -->
+            <v:BoolToVisibilityConverter x:Key="BoolToVis" />
+            <v:InverseBoolConverter x:Key="InverseBool" />
+            <v:StatusKindToBrushConverter x:Key="StatusBrush" />
+            <v:EnumEqualsVisibilityConverter x:Key="StepVis" />
+            <v:StepActiveBrushConverter x:Key="StepBrush" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

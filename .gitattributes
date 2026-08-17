@@ -1,0 +1,21 @@
+# Normalize line endings. Text files are stored with LF in the repo and checked
+# out with the platform-native ending. Windows-specific files keep CRLF.
+* text=auto
+
+*.cs      text
+*.xaml    text
+*.csproj  text
+*.props   text
+*.sln     text eol=crlf
+*.iss     text eol=crlf
+*.md      text
+*.yml     text
+*.yaml    text
+*.json    text
+
+# Binary assets
+*.png binary
+*.svg text
+*.ico binary
+*.7z  binary
+*.exe binary

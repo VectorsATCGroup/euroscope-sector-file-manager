@@ -1,0 +1,94 @@
+name: Release
+
+# Publishes a versioned installer whenever a tag like v1.2.3 is pushed.
+#   git tag v1.2.3 && git push origin v1.2.3
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build (without the leading v), e.g. 1.2.3"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Resolve version
+        id: ver
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -like 'refs/tags/*') {
+            $v = $env:GITHUB_REF_NAME -replace '^v', ''
+          } else {
+            $v = '${{ github.event.inputs.version }}'
+          }
+          if (-not ($v -match '^\d+\.\d+\.\d+$')) { throw "Invalid version '$v'. Expected N.N.N" }
+          "version=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "tag=v$v"    | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "Building version $v"
+
+      - name: Restore
+        run: dotnet restore Vectors.EuroScopeUpdater.sln
+
+      - name: Build
+        run: dotnet build Vectors.EuroScopeUpdater.sln -c Release --no-restore -p:Version=${{ steps.ver.outputs.version }}
+
+      - name: Test
+        run: dotnet test Vectors.EuroScopeUpdater.sln -c Release --no-build --verbosity normal
+
+      - name: Publish self-contained app
+        run: >
+          dotnet publish src/Vectors.EuroScopeUpdater.App/Vectors.EuroScopeUpdater.App.csproj
+          -c Release -r win-x64 --self-contained
+          -p:Version=${{ steps.ver.outputs.version }}
+          -o build/app
+
+      - name: Fetch WebView2 bootstrapper
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path installer/redist | Out-Null
+          Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile 'installer/redist/MicrosoftEdgeWebview2Setup.exe'
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DAppVersion=${{ steps.ver.outputs.version }} installer/setup.iss
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer
+          path: installer/Output/*.exe
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = '${{ steps.ver.outputs.tag }}'
+          $notesArg = '--generate-notes'
+          # If the tag already has a release, upload the asset to it instead of failing.
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag (Get-Item installer/Output/*.exe).FullName --clobber
+          } else {
+            gh release create $tag (Get-Item installer/Output/*.exe).FullName `
+              --title "EuroScope Sector File Manager $tag" $notesArg
+          }

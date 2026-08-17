@@ -1,0 +1,115 @@
+<UserControl x:Class="Vectors.EuroScopeUpdater.App.Views.WizardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:Vectors.EuroScopeUpdater.App.Services"
+             xmlns:vm="clr-namespace:Vectors.EuroScopeUpdater.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:SetupWizardViewModel}">
+
+    <!-- Fixed-width column keeps every step the same width regardless of its content. -->
+    <Grid HorizontalAlignment="Center" VerticalAlignment="Stretch" Width="640" Margin="0,20,0,28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="{loc:Loc Wizard_Header}" Style="{StaticResource TechLabel}" />
+            <TextBlock Text="EuroScope Sector File Manager" Style="{StaticResource Display}" Margin="0,2,0,0" />
+        </StackPanel>
+
+        <!-- Step rail -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,18,0,10">
+            <Border Height="4" Width="118" CornerRadius="2" Margin="0,0,6,0" Background="{Binding StepIndex, Converter={StaticResource StepBrush}, ConverterParameter=0}" />
+            <Border Height="4" Width="118" CornerRadius="2" Margin="0,0,6,0" Background="{Binding StepIndex, Converter={StaticResource StepBrush}, ConverterParameter=1}" />
+            <Border Height="4" Width="118" CornerRadius="2" Margin="0,0,6,0" Background="{Binding StepIndex, Converter={StaticResource StepBrush}, ConverterParameter=2}" />
+            <Border Height="4" Width="118" CornerRadius="2" Margin="0,0,6,0" Background="{Binding StepIndex, Converter={StaticResource StepBrush}, ConverterParameter=3}" />
+            <Border Height="4" Width="118" CornerRadius="2" Background="{Binding StepIndex, Converter={StaticResource StepBrush}, ConverterParameter=4}" />
+        </StackPanel>
+
+        <!-- Panels (fixed min-height keeps the card stable across steps) -->
+        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="28" Margin="0,8,0,0" MinHeight="300" VerticalAlignment="Top">
+            <Grid>
+                <!-- Boas-vindas -->
+                <StackPanel Visibility="{Binding Step, Converter={StaticResource StepVis}, ConverterParameter=Welcome}">
+                    <TextBlock Text="{loc:Loc Wizard_Welcome_Title}" Style="{StaticResource H2}" />
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,10,0,0" TextWrapping="Wrap"
+                               Text="{loc:Loc Wizard_Welcome_1}" />
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,10,0,0" TextWrapping="Wrap"
+                               Text="{loc:Loc Wizard_Welcome_2}" />
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,10,0,0" TextWrapping="Wrap"
+                               Text="{loc:Loc Wizard_Welcome_3}" />
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,10,0,0" TextWrapping="Wrap"
+                               Text="{loc:Loc Wizard_Welcome_4}" />
+                </StackPanel>
+
+                <!-- EuroScope -->
+                <StackPanel Visibility="{Binding Step, Converter={StaticResource StepVis}, ConverterParameter=EuroScope}">
+                    <TextBlock Text="{loc:Loc Wizard_ES_Title}" Style="{StaticResource H2}" />
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,14" TextWrapping="Wrap"
+                               Text="{loc:Loc Wizard_ES_Desc}" />
+                    <TextBlock Text="{loc:Loc Wizard_ES_FolderLabel}" Style="{StaticResource TechLabel}" />
+                    <TextBox Style="{StaticResource Field}" Text="{Binding EuroScopePath, Mode=OneWay}" IsReadOnly="True" Margin="0,4,0,10" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="{loc:Loc Wizard_ES_DetectAgain}" Style="{StaticResource GhostButton}" Command="{Binding DetectCommand}" Margin="0,0,8,0" />
+                        <Button Content="{loc:Loc Wizard_ES_Locate}" Style="{StaticResource GhostButton}" Command="{Binding LocateEuroScopeCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource Muted}" Margin="0,12,0,0" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <!-- Local dos Sector Files -->
+                <StackPanel Visibility="{Binding Step, Converter={StaticResource StepVis}, ConverterParameter=Location}">
+                    <TextBlock Text="{loc:Loc Wizard_Loc_Title}" Style="{StaticResource H2}" />
+                    <RadioButton GroupName="loc" Foreground="{DynamicResource ForegroundBrush}" Margin="0,12,0,0"
+                                 IsChecked="{Binding UseRecommendedLocation, Mode=TwoWay}">
+                        <StackPanel>
+                            <TextBlock Text="{loc:Loc Wizard_Loc_Recommended}" Style="{StaticResource Body}" />
+                            <TextBlock Text="{Binding ResolvedSectorFilesPath}" Style="{StaticResource Muted}" FontFamily="{StaticResource MonoFont}" FontSize="11" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton GroupName="loc" Foreground="{DynamicResource ForegroundBrush}" Margin="0,14,0,0">
+                        <TextBlock Text="{loc:Loc Wizard_Loc_Custom}" Style="{StaticResource Body}" />
+                    </RadioButton>
+                    <StackPanel Orientation="Horizontal" Margin="24,8,0,0"
+                                Visibility="{Binding UseRecommendedLocation, Converter={StaticResource BoolToVis}, ConverterParameter=invert}">
+                        <TextBox Style="{StaticResource Field}" Width="360" Text="{Binding CustomLocation, Mode=OneWay}" IsReadOnly="True" Margin="0,0,8,0" />
+                        <Button Content="{loc:Loc Wizard_Loc_Choose}" Style="{StaticResource GhostButton}" Command="{Binding PickCustomLocationCommand}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Autenticação -->
+                <StackPanel Visibility="{Binding Step, Converter={StaticResource StepVis}, ConverterParameter=Authentication}">
+                    <TextBlock Text="{loc:Loc Wizard_Auth_Title}" Style="{StaticResource H2}" />
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,14" TextWrapping="Wrap"
+                               Text="{loc:Loc Wizard_Auth_Desc}" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="{loc:Loc Wizard_Auth_Now}" Style="{StaticResource PrimaryButton}" Command="{Binding AuthenticateCommand}" IsEnabled="{Binding Busy, Converter={StaticResource InverseBool}}" />
+                        <TextBlock Text="{loc:Loc Wizard_Auth_Done}" Style="{StaticResource TechValue}" VerticalAlignment="Center" Margin="14,0,0,0"
+                                   Visibility="{Binding Authenticated, Converter={StaticResource BoolToVis}}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource Muted}" Margin="0,12,0,0" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <!-- Pronto -->
+                <StackPanel Visibility="{Binding Step, Converter={StaticResource StepVis}, ConverterParameter=Ready}">
+                    <TextBlock Text="{loc:Loc Wizard_Ready_Title}" Style="{StaticResource H2}" />
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" TextWrapping="Wrap"
+                               Text="{loc:Loc Wizard_Ready_Desc}" />
+                    <Border Style="{StaticResource Chip}" HorizontalAlignment="Left" Margin="0,16,0,0">
+                        <TextBlock Text="{Binding DivisionName}" Style="{StaticResource Body}" FontSize="12" />
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Footer nav -->
+        <Grid Grid.Row="3" Margin="0,18,0,0">
+            <Button Content="{loc:Loc Common_Back}" Style="{StaticResource GhostButton}" HorizontalAlignment="Left" Command="{Binding BackCommand}" />
+            <Button Content="{loc:Loc Common_Continue}" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Right" Command="{Binding NextCommand}" />
+        </Grid>
+    </Grid>
+</UserControl>

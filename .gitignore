@@ -1,0 +1,30 @@
+## Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+publish/
+*.user
+.vs/
+
+## Build and publish output
+build/
+installer/Output/
+
+## WebView2 bootstrapper (a Microsoft binary, fetched at build time, never committed)
+installer/redist/*.exe
+
+## AeroNav packages must never be committed (copyright: not for distribution)
+*.7z
+fixtures/**/*.7z
+!fixtures/README.md
+## ...except the SYNTHETIC test fixtures (contain no AeroNav data)
+!fixtures/archives/*.7z
+
+## Local app data / logs that may appear during manual runs
+*.log
+
+## OS
+Thumbs.db
+.DS_Store
