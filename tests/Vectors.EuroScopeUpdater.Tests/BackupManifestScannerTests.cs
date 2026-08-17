@@ -142,6 +142,31 @@ public class LocalInstallationScannerTests
     }
 
     [Fact]
+    public void Stale_manifest_does_not_override_the_actual_installed_files()
+    {
+        // Reproduces a real machine state: the manifest on record claimed a newer AIRAC (2608)
+        // than the sector file actually on disk (2607), e.g. after an interrupted install or an
+        // external change. The scanner must trust the .sct EuroScope loads, not the stale manifest.
+        using var ws = new TestWorkspace();
+        var fir = ws.FirDir("SBRE");
+        SyntheticPackages.BuildInstall(fir, "SBRE", "2607"); // what is really on disk
+
+        // Write a manifest that describes a DIFFERENT (2608) tree, not present in the FIR folder.
+        var scratch = Path.Combine(ws.FirDir("SBRE"), "..", "scratch2608");
+        SyntheticPackages.BuildInstall(scratch, "SBRE", "2608");
+        var svc = new ManifestService(ws.AppPaths);
+        PackageName.TryParsePackage(SyntheticPackages.PackageFileName("SBRE", PackageType.Install, "2608"), out var name2608);
+        svc.Write(svc.Build(scratch, name2608, SectorFiles.CurrentSctFileName(scratch)!, DateTime.UtcNow));
+
+        var state = new LocalInstallationScanner(svc).Scan("SBRE", fir, CatalogWithUpdate("SBRE", "2608"));
+
+        Assert.Equal(2607, state.InstalledAirac!.Value.Value);      // disk truth, not the manifest's 2608
+        Assert.Equal(InstallStatus.UpdateAvailable, state.Status);  // actionable, offers the 2608 update
+        Assert.False(state.HasManifest);                            // the manifest does not describe this install
+        Assert.Empty(state.ModifiedFiles);                          // no false "modified" from the wrong manifest
+    }
+
+    [Fact]
     public void Personalization_edit_does_not_flag_modified()
     {
         using var ws = new TestWorkspace();
