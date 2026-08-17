@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-08-17
+
+### Changed
+
+- The uninstaller now also removes the (now empty) program folder and its parent, and clears the legacy `EuroScopeUpdater` data folder from the pre-rename identity, so nothing is left behind. Validated end to end with a silent install, uninstall, and reinstall cycle.
+
 ## [1.0.1] - 2026-08-17
 
 ### Fixed
@@ -46,6 +52,7 @@ First public release.
 - Archive extraction protected against path traversal (zip slip).
 - Cookies, tokens, authorization headers, and signed URLs are never logged.
 
-[Unreleased]: https://github.com/VectorsATCGroup/euroscope-sector-file-manager/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/VectorsATCGroup/euroscope-sector-file-manager/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/VectorsATCGroup/euroscope-sector-file-manager/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/VectorsATCGroup/euroscope-sector-file-manager/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/VectorsATCGroup/euroscope-sector-file-manager/releases/tag/v1.0.0
