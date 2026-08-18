@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-08-18
+
+### Fixed
+
+- Installing a second package in the same session no longer gets blocked. Chromium prompts "this site is trying to download multiple files" on the second download, and choosing "Block" silently denied every later download until the app was restarted. The app now automatically allows the multiple-downloads permission for the AeroNav session, so the user can install several FIRs in a row without any prompt or restart.
+
 ## [1.0.2] - 2026-08-17
 
 ### Changed
@@ -52,7 +58,8 @@ First public release.
 - Archive extraction protected against path traversal (zip slip).
 - Cookies, tokens, authorization headers, and signed URLs are never logged.
 
-[Unreleased]: https://github.com/VectorsATCGroup/euroscope-sector-file-manager/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/VectorsATCGroup/euroscope-sector-file-manager/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/VectorsATCGroup/euroscope-sector-file-manager/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/VectorsATCGroup/euroscope-sector-file-manager/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/VectorsATCGroup/euroscope-sector-file-manager/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/VectorsATCGroup/euroscope-sector-file-manager/releases/tag/v1.0.0
