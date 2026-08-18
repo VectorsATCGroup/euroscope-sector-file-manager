@@ -182,6 +182,20 @@ public sealed class WebView2AeroNavBrowser : IAeroNavBrowser
             s.IsPasswordAutosaveEnabled = false;
             s.IsStatusBarEnabled = false;
 
+            // Installing more than one FIR in a single session triggers Chromium's "this site wants to
+            // download multiple files" prompt. If the user picks "Block", every further download in the
+            // session is silently denied and the only recovery is restarting the app. Auto-allow just this
+            // one permission kind (downloads the user explicitly initiated from AeroNav) so a second, third
+            // package installs without any prompt; all other permission kinds keep their default handling.
+            _web.CoreWebView2.PermissionRequested += (_, e) =>
+            {
+                if (e.PermissionKind == CoreWebView2PermissionKind.MultipleAutomaticDownloads)
+                {
+                    e.State = CoreWebView2PermissionState.Allow;
+                    e.Handled = true;
+                }
+            };
+
             _web.CoreWebView2.SourceChanged += (_, _) => UpdateDomainLabel();
             _web.CoreWebView2.NavigationCompleted += async (_, _) =>
             {
