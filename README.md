@@ -29,6 +29,7 @@ Keeping EuroScope Sector Files current normally means visiting AeroNav, download
 - **Transactional and reversible.** Every change is staged, an automatic backup is taken, and the operation is committed only if it fully succeeds. If anything fails, it rolls back.
 - **Shows what you have.** The dashboard always displays the installed AIRAC per FIR and what is available.
 - **Light and dark themes**, Portuguese and English.
+- **Tells you when a new version is out.** At startup the app checks the project's GitHub Releases and offers a one-click update (download, verify, silent install, restart). It can be turned off in Settings.
 
 ## Privacy first, by design
 
@@ -37,6 +38,7 @@ This tool is built so that it **cannot** collect your credentials or personal da
 - **No telemetry, no analytics, no advertising, no backend.** Nothing is sent to any Vectors ATC Group server.
 - **Your password is never seen by the app.** Authentication happens exclusively on the official AeroNav, VATSIM, and Navigraph pages, inside an **isolated** browser profile separate from your own browser. The app never types, reads, intercepts, or stores your password.
 - **Only technical settings are stored locally** (install paths, installed versions, theme, language). The AeroNav session cookies live in the isolated profile only, to avoid signing in on every launch.
+- **The update check is anonymous and optional.** The app reads the public GitHub Releases metadata of this repository (`api.github.com`) to know whether a newer version exists; the request carries only the app name and version. Installers are downloaded from this repository only and verified (SHA-256) before they run. You can disable the check in Settings.
 
 The full usage and privacy terms are in [TERMS.txt](TERMS.txt).
 
@@ -125,6 +127,7 @@ Manter os Sector Files atualizados normalmente exige acessar o AeroNav, baixar o
 - **Transacional e reversível.** Cada mudança é preparada, um backup automático é feito, e a operação só é confirmada se der certo por completo. Se algo falhar, é revertida.
 - **Mostra o que você tem.** O painel sempre exibe o AIRAC instalado por FIR e o que está disponível.
 - **Temas claro e escuro**, português e inglês.
+- **Avisa quando há uma nova versão.** Ao iniciar, o aplicativo consulta os Releases do projeto no GitHub e oferece atualização em um clique (baixa, verifica, instala silenciosamente e reinicia). Pode ser desativado em Configurações.
 
 ### Privacidade em primeiro lugar
 
@@ -133,6 +136,7 @@ O aplicativo foi construído para que **não seja capaz** de coletar suas creden
 - **Sem telemetria, sem analytics, sem publicidade, sem backend.** Nada é enviado a nenhum servidor do Vectors ATC Group.
 - **O aplicativo nunca vê a sua senha.** A autenticação acontece exclusivamente nas páginas oficiais do AeroNav, VATSIM e Navigraph, dentro de um perfil de navegador **isolado**, separado do seu navegador. O app nunca digita, lê, intercepta ou armazena a sua senha.
 - **Apenas configurações técnicas ficam salvas localmente** (caminhos, versões instaladas, tema, idioma). Os cookies da sessão do AeroNav ficam somente nesse perfil isolado, apenas para evitar novo login a cada abertura.
+- **A verificação de atualizações é anônima e opcional.** O aplicativo lê os metadados públicos de Releases deste repositório no GitHub (`api.github.com`) para saber se existe versão mais nova; a consulta leva apenas o nome e a versão do aplicativo. Os instaladores são baixados somente deste repositório e verificados (SHA-256) antes de executar. A verificação pode ser desativada em Configurações.
 
 Os termos completos de uso e privacidade estão em [TERMS.txt](TERMS.txt).
 

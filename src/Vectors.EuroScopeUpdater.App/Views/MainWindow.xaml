@@ -32,6 +32,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="52" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -61,7 +62,21 @@
             </Grid>
         </Border>
 
+        <!-- New-version banner (shown after a check finds a newer release; reopens the update dialog) -->
+        <Border Grid.Row="1" Background="{DynamicResource ElevatedBrush}"
+                BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="0,0,0,1" Padding="28,8"
+                Visibility="{Binding UpdateAvailable, Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="8" Height="8" Fill="{DynamicResource RadarBlipBrush}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <TextBlock Text="{Binding UpdateBannerText}" Style="{StaticResource Body}" FontSize="12" VerticalAlignment="Center" />
+                </StackPanel>
+                <Button Content="{loc:Loc Upd_BannerAction}" Style="{StaticResource PrimaryButton}" Padding="14,5"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Command="{Binding ShowUpdateCommand}" />
+            </Grid>
+        </Border>
+
         <!-- Content -->
-        <ContentControl Grid.Row="1" Content="{Binding CurrentView}" Margin="0" />
+        <ContentControl Grid.Row="2" Content="{Binding CurrentView}" Margin="0" />
     </Grid>
 </Window>

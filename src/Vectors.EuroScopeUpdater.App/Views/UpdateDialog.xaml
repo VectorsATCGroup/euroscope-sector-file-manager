@@ -1,0 +1,65 @@
+<Window x:Class="Vectors.EuroScopeUpdater.App.Views.UpdateDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:Vectors.EuroScopeUpdater.App.Services"
+        xmlns:vm="clr-namespace:Vectors.EuroScopeUpdater.App.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance vm:UpdateViewModel}"
+        Title="{loc:Loc Upd_Title}"
+        Icon="pack://application:,,,/Assets/app.ico"
+        Width="560" SizeToContent="Height" MinHeight="260"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False"
+        Background="{DynamicResource BgBrush}"
+        TextOptions.TextFormattingMode="Ideal" UseLayoutRounding="True">
+
+    <Border Padding="28,24,28,22">
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Image Source="{DynamicResource LogoSource}" Height="26" VerticalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality" />
+                <Border Width="1" Height="22" Background="{DynamicResource BorderBrush}" Margin="14,0" />
+                <TextBlock Text="{loc:Loc Upd_Title}" Style="{StaticResource H2}" VerticalAlignment="Center" />
+            </StackPanel>
+
+            <TextBlock Text="{Binding BodyText}" Style="{StaticResource Body}" TextWrapping="Wrap" Margin="0,16,0,0" />
+
+            <!-- Release notes -->
+            <Border Style="{StaticResource Card}" Margin="0,14,0,0" Padding="16,12"
+                    Visibility="{Binding HasNotes, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <TextBlock Text="{loc:Loc Upd_Notes}" Style="{StaticResource TechLabel}" />
+                    <ScrollViewer MaxHeight="180" VerticalScrollBarVisibility="Auto" Margin="0,8,0,0">
+                        <TextBlock Text="{Binding NotesText}" Style="{StaticResource Muted}" TextWrapping="Wrap" />
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+
+            <!-- No installer asset on this release (manual download) -->
+            <TextBlock Text="{loc:Loc Upd_NoInstaller}" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,12,0,0"
+                       Visibility="{Binding HasInstaller, Converter={StaticResource BoolToVis}, ConverterParameter=invert}" />
+
+            <!-- Progress (download / verify / hand-off) -->
+            <StackPanel Margin="0,14,0,0" Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}">
+                <ProgressBar Style="{StaticResource RadarProgress}" Value="{Binding Percent}" Maximum="100"
+                             IsIndeterminate="{Binding Indeterminate}" />
+            </StackPanel>
+            <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,0" />
+
+            <!-- Actions -->
+            <Grid Margin="0,18,0,0">
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <Hyperlink Command="{Binding OpenReleasePageCommand}" Foreground="{DynamicResource PrimaryBrush}" TextDecorations="Underline">
+                        <Run Text="{loc:Loc Upd_ViewOnGitHub}" />
+                    </Hyperlink>
+                </TextBlock>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="{Binding LaterButtonText}" Style="{StaticResource GhostButton}"
+                            Command="{Binding LaterCommand}" Margin="0,0,8,0" MinWidth="100" />
+                    <Button Content="{loc:Loc Upd_InstallNow}" Style="{StaticResource PrimaryButton}"
+                            Command="{Binding InstallNowCommand}" MinWidth="140" />
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

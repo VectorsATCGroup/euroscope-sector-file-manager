@@ -47,9 +47,14 @@ public sealed class AeroNavWebPackageSource : ISectorPackageSource, IAuthenticat
             division.Id, catalog.Packages.Count, catalog.Airac);
 
         // Diagnostic: if nothing parsed, snapshot the listing so the parser can be calibrated to the
-        // real page structure. Local file only; never uploaded. Safe to delete.
+        // real page structure. Local file only; never uploaded. Safe to delete. An empty listing is
+        // never a real answer from AeroNav (every FIR always has packages), so report it as the source
+        // being unavailable instead of silently showing an empty dashboard.
         if (catalog.Packages.Count == 0)
+        {
             TryWriteListingSnapshot(html);
+            throw new PackageSourceUnavailableException("A lista de pacotes do AeroNav não carregou.");
+        }
 
         return catalog;
     }

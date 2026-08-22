@@ -2,15 +2,17 @@ using System.IO;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using Vectors.EuroScopeUpdater.App.Infrastructure;
 using Vectors.EuroScopeUpdater.App.Services;
 using Vectors.EuroScopeUpdater.Core.Locators;
 using Vectors.EuroScopeUpdater.Core.Paths;
 using Vectors.EuroScopeUpdater.Core.Settings;
+using Vectors.EuroScopeUpdater.Core.Updates;
 
 namespace Vectors.EuroScopeUpdater.App.ViewModels;
 
-/// <summary>Small settings area: paths, authentication/logout, backups info and about.</summary>
+/// <summary>Small settings area: paths, authentication/logout, updates, backups info and about.</summary>
 public sealed partial class SettingsViewModel : ObservableObject
 {
     private readonly ISettingsService _settings;
@@ -20,10 +22,12 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly IDialogService _dialogs;
     private readonly INavigationService _nav;
     private readonly AppPaths _paths;
+    private readonly IUpdateService _updates;
+    private readonly ILogger<SettingsViewModel> _log;
 
     public SettingsViewModel(ISettingsService settings, IEuroScopeLocator euroScope,
         ISectorFilesLocator sectorFiles, IAeroNavBrowser browser, IDialogService dialogs,
-        INavigationService nav, AppPaths paths)
+        INavigationService nav, AppPaths paths, IUpdateService updates, ILogger<SettingsViewModel> log)
     {
         _settings = settings;
         _euroScope = euroScope;
@@ -32,19 +36,41 @@ public sealed partial class SettingsViewModel : ObservableObject
         _dialogs = dialogs;
         _nav = nav;
         _paths = paths;
+        _updates = updates;
+        _log = log;
 
         EuroScopePath = settings.Current.EuroScopePath ?? "";
         SectorFilesPath = settings.Current.SectorFilesPath ?? "";
         BackupsToKeep = settings.Current.BackupsToKeep;
+        _checkForUpdates = settings.Current.CheckForUpdates;
+        if (_updates.AvailableRelease is { } r)
+            UpdateStatusMessage = string.Format(Localization.Instance.T("Set_Updates_Available"), r.VersionText);
     }
 
     [ObservableProperty] private string _euroScopePath = "";
     [ObservableProperty] private string _sectorFilesPath = "";
     [ObservableProperty] private int _backupsToKeep;
+    [ObservableProperty] private bool _checkForUpdates;
+    [ObservableProperty] private bool _checkingUpdates;
+    [ObservableProperty] private string? _updateStatusMessage;
 
-    public string Version => typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
+    public string Version => AppVersions.Format(_updates.CurrentVersion);
     public string VersionLabel => string.Format(Localization.Instance.T("Set_Version"), Version);
     public string CurrentLanguageLabel => Localization.Instance.Language == AppLanguage.Pt ? "Português" : "English";
+    public string AutoUpdateStateLabel => Localization.Instance.T(CheckForUpdates ? "Common_On" : "Common_Off");
+
+    partial void OnCheckForUpdatesChanged(bool value)
+    {
+        var s = _settings.Current;
+        if (s.CheckForUpdates != value)
+        {
+            s.CheckForUpdates = value;
+            _settings.Save(s);
+        }
+        OnPropertyChanged(nameof(AutoUpdateStateLabel));
+    }
+
+    partial void OnCheckingUpdatesChanged(bool value) => CheckUpdatesNowCommand.NotifyCanExecuteChanged();
 
     [RelayCommand]
     private void SetLanguage(string code)
@@ -56,6 +82,38 @@ public sealed partial class SettingsViewModel : ObservableObject
         _settings.Save(s);
         OnPropertyChanged(nameof(CurrentLanguageLabel));
         OnPropertyChanged(nameof(VersionLabel));
+        OnPropertyChanged(nameof(AutoUpdateStateLabel));
+    }
+
+    [RelayCommand]
+    private void SetAutoUpdate(string state) => CheckForUpdates = string.Equals(state, "On", StringComparison.OrdinalIgnoreCase);
+
+    private bool CanCheckUpdatesNow() => !CheckingUpdates;
+
+    [RelayCommand(CanExecute = nameof(CanCheckUpdatesNow))]
+    private async Task CheckUpdatesNowAsync()
+    {
+        CheckingUpdates = true;
+        UpdateStatusMessage = Localization.Instance.T("Set_Updates_Checking");
+        try
+        {
+            var result = await _updates.CheckAsync();
+            if (result is null)
+                UpdateStatusMessage = Localization.Instance.T("Set_Updates_Unavailable");
+            else if (result.IsUpdateAvailable)
+            {
+                UpdateStatusMessage = string.Format(Localization.Instance.T("Set_Updates_Available"), result.Latest!.VersionText);
+                _dialogs.ShowUpdate(new UpdateViewModel(result.Latest, _updates, _log));
+            }
+            else
+                UpdateStatusMessage = string.Format(Localization.Instance.T("Set_Updates_UpToDate"), Version);
+        }
+        catch (Exception ex)
+        {
+            _log.LogWarning(ex, "manual update check failed");
+            UpdateStatusMessage = Localization.Instance.T("Set_Updates_Unavailable");
+        }
+        finally { CheckingUpdates = false; }
     }
 
     [RelayCommand]
