@@ -27,4 +27,17 @@ public sealed record RemoteCatalog(
         .Where(p => p.FirCode.Equals(firCode, StringComparison.OrdinalIgnoreCase) && p.Type == type)
         .OrderByDescending(p => p.Name.VersionRank)
         .FirstOrDefault();
+
+    /// <summary>
+    /// Newest version offered for a FIR across Install and Update packages (cycle, then within-cycle
+    /// revision, then package revision), or null when the FIR has no package.
+    /// </summary>
+    public SectorVersion? BestVersion(string firCode)
+    {
+        var update = Best(firCode, PackageType.Update)?.Name.Version;
+        var install = Best(firCode, PackageType.Install)?.Name.Version;
+        if (update is null) return install;
+        if (install is null) return update;
+        return update.Value >= install.Value ? update : install;
+    }
 }
