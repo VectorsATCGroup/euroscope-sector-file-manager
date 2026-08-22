@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Same-cycle re-issues from AeroNav are now recognised as updates. AeroNav's operations team sometimes re-publishes a package inside the same AIRAC by bumping the revision pair of the `YYNNRR` field (`260801` → `260802`). The app already picked the newest package for download, but the installed/available comparison only looked at the cycle, so such a re-issue showed as "Up to date" and was never offered. Installed and available versions are now compared in full (cycle, then within-cycle revision, then package revision), the dashboard shows re-issues as `2608/2` (the first issue stays `2608`), and a stale manifest from a different re-issue no longer describes the install.
+
 ## [1.1.0] - 2026-08-22
 
 ### Added

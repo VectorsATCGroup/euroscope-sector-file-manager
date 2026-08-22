@@ -50,9 +50,9 @@ public sealed class FolderPackageSource : ISectorPackageSource
 
     public string DisplayName => "Folder (test)";
 
-    public RemotePackage Add(string fir, PackageType type, string cycle, string contentDir)
+    public RemotePackage Add(string fir, PackageType type, string cycle, string contentDir, int cycleRevision = 1, int packageRevision = 1)
     {
-        var fileName = SyntheticPackages.PackageFileName(fir, type, cycle);
+        var fileName = SyntheticPackages.PackageFileName(fir, type, cycle, cycleRevision, packageRevision);
         PackageName.TryParsePackage(fileName, out var name);
         var pkg = new RemotePackage(fir, type, name.Airac, name, fileName, contentDir,
             SizeBytes: null);
