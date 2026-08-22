@@ -197,10 +197,10 @@ public sealed partial class DashboardViewModel : ObservableObject
         {
             var state = await Task.Run(() => _scanner.Scan(item.Code, FirDir(item.Code), catalog));
             item.Status = state.Status;
-            item.InstalledAirac = state.InstalledAirac;
+            item.InstalledVersion = state.InstalledVersion;
             item.BestInstall = catalog?.Best(item.Code, PackageType.Install);
             item.BestUpdate = catalog?.Best(item.Code, PackageType.Update);
-            item.AvailableAirac = item.BestUpdate?.Airac ?? item.BestInstall?.Airac;
+            item.AvailableVersion = state.AvailableVersion; // newest across Install/Update, incl. same-cycle re-issues
             item.Refreshed();
         }
         UpdateAllCommand.NotifyCanExecuteChanged();

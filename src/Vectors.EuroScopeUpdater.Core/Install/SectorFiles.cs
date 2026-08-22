@@ -29,14 +29,21 @@ public static class SectorFiles
             .Select(Path.GetFileName)
             .FirstOrDefault(n => n!.EndsWith(".sct", StringComparison.OrdinalIgnoreCase));
 
-    /// <summary>Highest installed AIRAC inferred from the versioned sector file names, or null.</summary>
-    public static AiracCycle? InferInstalledAirac(string firDirectory)
+    /// <summary>
+    /// Highest installed version (AIRAC cycle, within-cycle revision and package revision) inferred from
+    /// the versioned sector file names, or null. The stamped <c>.sct</c> EuroScope loads is the ground
+    /// truth for what is installed, including AeroNav's same-cycle re-issues (<c>260801</c> → <c>260802</c>).
+    /// </summary>
+    public static SectorVersion? InferInstalledVersion(string firDirectory)
     {
-        AiracCycle? best = null;
+        SectorVersion? best = null;
         foreach (var f in FindVersioned(firDirectory))
             if (PackageName.TryParseSectorFile(Path.GetFileName(f), out var sf))
-                if (best is null || sf.Airac > best.Value)
-                    best = sf.Airac;
+                if (best is null || sf.Version > best.Value)
+                    best = sf.Version;
         return best;
     }
+
+    /// <summary>Highest installed AIRAC cycle inferred from the versioned sector file names, or null.</summary>
+    public static AiracCycle? InferInstalledAirac(string firDirectory) => InferInstalledVersion(firDirectory)?.Airac;
 }

@@ -33,40 +33,56 @@ public sealed class LocalInstallationScanner : ILocalInstallationScanner
         if (!hasSct)
             return new LocalFirState(firCode, InstallStatus.InstallationIncomplete, null, false, Array.Empty<string>());
 
-        // The versioned .sct that EuroScope actually loads is the ground truth for what is installed.
-        // A manifest is only trustworthy when it agrees with the files on disk; if it does not
-        // (an interrupted install, a manual change, files replaced outside the app), the manifest is
-        // stale and must not drive the reported version or the "modified files" comparison.
-        var fileAirac = SectorFiles.InferInstalledAirac(firDirectory);
+        // The versioned .sct that EuroScope actually loads is the ground truth for what is installed,
+        // including AeroNav's same-cycle re-issues (260801 → 260802): its name carries the cycle, the
+        // within-cycle revision and the package revision. A manifest is only trustworthy when it agrees
+        // with the files on disk (same cycle and same within-cycle revision); if it does not (an
+        // interrupted install, a manual change, files replaced outside the app), the manifest is stale
+        // and must not drive the reported version or the "modified files" comparison.
+        var fileVersion = SectorFiles.InferInstalledVersion(firDirectory);
         var manifest = _manifest.Read(firCode);
-        var manifestAirac = (manifest is not null && manifest.TryGetAirac(out var mAirac)) ? mAirac : (AiracCycle?)null;
-        var manifestMatchesDisk = manifest is not null && fileAirac is not null
-            && manifestAirac is not null && manifestAirac.Value == fileAirac.Value;
+        SectorVersion? manifestVersion = manifest is not null && manifest.TryGetAirac(out var mAirac)
+            ? new SectorVersion(mAirac, manifest.CycleRevision, manifest.PackageRevision)
+            : null;
+        var manifestMatchesDisk = fileVersion is not null && manifestVersion is not null
+            && manifestVersion.Value.SameIssue(fileVersion.Value);
 
-        AiracCycle? installedAirac = fileAirac ?? manifestAirac;
+        // When the manifest describes this very install, it also knows which PACKAGE revision was
+        // applied (a re-packaged release can ship the same stamped .sct), so take the higher of the two
+        // and never offer the package we just installed again.
+        SectorVersion? installedVersion = fileVersion is { } fv
+            ? (manifestMatchesDisk && manifestVersion!.Value.PackageRevision > fv.PackageRevision
+                ? fv with { PackageRevision = manifestVersion.Value.PackageRevision }
+                : fv)
+            : manifestVersion;
 
         var modifiedCore = manifestMatchesDisk
             ? DetectModifiedCoreFiles(manifest!, firDirectory, ct)
             : Array.Empty<string>();
 
-        var latestRemote = LatestRemote(catalog, firCode);
+        var latestRemote = catalog?.BestVersion(firCode);
 
-        // Priority: an available update is the most actionable signal.
-        if (latestRemote is not null && installedAirac is not null && installedAirac.Value < latestRemote.Value)
+        // Priority: an available update is the most actionable signal. A newer within-cycle revision
+        // (2608 → 2608/2) or a newer package revision counts as an update, not only a newer cycle.
+        if (latestRemote is not null && installedVersion is not null && installedVersion.Value < latestRemote.Value)
             return State(InstallStatus.UpdateAvailable);
 
         if (modifiedCore.Count > 0)
             return State(InstallStatus.LocallyModified, modifiedCore);
 
-        if (latestRemote is not null && installedAirac is not null)
-            return State(InstallStatus.UpToDate); // installedAirac >= latest, proven
+        if (latestRemote is not null && installedVersion is not null)
+            return State(InstallStatus.UpToDate); // installed >= latest, proven
 
-        // We may know the installed AIRAC but have nothing to compare it to yet (e.g. pre-auth), or
+        // We may know the installed version but have nothing to compare it to yet (e.g. pre-auth), or
         // it is a legacy manual install with no manifest and no parseable version.
         return State(InstallStatus.InstalledVersionUnknown);
 
         LocalFirState State(InstallStatus s, IReadOnlyList<string>? mods = null) =>
-            new(firCode, s, installedAirac, manifestMatchesDisk, mods ?? Array.Empty<string>());
+            new(firCode, s, installedVersion?.Airac, manifestMatchesDisk, mods ?? Array.Empty<string>())
+            {
+                InstalledVersion = installedVersion,
+                AvailableVersion = latestRemote,
+            };
     }
 
     private static IReadOnlyList<string> DetectModifiedCoreFiles(LocalManifest manifest, string firDir, CancellationToken ct)
@@ -84,15 +100,5 @@ public sealed class LocalInstallationScanner : ILocalInstallationScanner
                 modified.Add(entry.RelativePath);
         }
         return modified;
-    }
-
-    private static AiracCycle? LatestRemote(RemoteCatalog? catalog, string firCode)
-    {
-        if (catalog is null) return null;
-        var update = catalog.Best(firCode, PackageType.Update)?.Airac;
-        var install = catalog.Best(firCode, PackageType.Install)?.Airac;
-        if (update is null) return install;
-        if (install is null) return update;
-        return update.Value > install.Value ? update : install;
     }
 }

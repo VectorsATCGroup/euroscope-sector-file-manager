@@ -11,19 +11,27 @@ namespace Vectors.EuroScopeUpdater.Tests.Support;
 /// </summary>
 public static class SyntheticPackages
 {
-    /// <summary>Versioned sector base name, e.g. SBRE-SBRE_20260810143935-260801-0001.</summary>
-    public static string SectorBase(string fir, string cycle) =>
-        $"{fir}-{fir}_2026{cycle[2..]}10143935-{cycle}01-0001";
+    /// <summary>
+    /// Versioned sector base name, e.g. SBRE-SBRE_20260810143935-260801-0001. <paramref name="cycleRevision"/>
+    /// is AeroNav's within-cycle re-issue (the RR pair: 260801 → 260802) and <paramref name="packageRevision"/>
+    /// the trailing group.
+    /// </summary>
+    public static string SectorBase(string fir, string cycle, int cycleRevision = 1, int packageRevision = 1) =>
+        $"{fir}-{fir}_2026{cycle[2..]}10143935-{cycle}{cycleRevision:D2}-{packageRevision:D4}";
 
-    public static string PackageFileName(string fir, PackageType type, string cycle) =>
-        $"{fir}-{(type == PackageType.Install ? "Install" : "Update")}-Package_2026{cycle[2..]}10143935-{cycle}01-0001.7z";
+    public static string PackageFileName(string fir, PackageType type, string cycle, int cycleRevision = 1, int packageRevision = 1) =>
+        $"{fir}-{(type == PackageType.Install ? "Install" : "Update")}-Package_2026{cycle[2..]}10143935-{cycle}{cycleRevision:D2}-{packageRevision:D4}.7z";
+
+    /// <summary>Content tag: "2608" for a cycle's first issue, "2608/2" for a re-issue, so tests can prove which files changed.</summary>
+    private static string Tag(string cycle, int cycleRevision) => cycleRevision == 1 ? cycle : $"{cycle}/{cycleRevision}";
 
     /// <summary>Create a full install content tree under <paramref name="destDir"/>.</summary>
-    public static void BuildInstall(string destDir, string fir, string cycle)
+    public static void BuildInstall(string destDir, string fir, string cycle, int cycleRevision = 1)
     {
         fir = fir.ToUpperInvariant();
         var lower = fir.ToLowerInvariant();
-        var sct = SectorBase(fir, cycle);
+        var sct = SectorBase(fir, cycle, cycleRevision);
+        cycle = Tag(cycle, cycleRevision);
 
         // Root-level versioned sector files + profiles + copyright.
         Write(destDir, $"{sct}.sct", $"SECTOR {fir} {cycle}");
@@ -36,10 +44,11 @@ public static class SyntheticPackages
     }
 
     /// <summary>Create an update content tree (the observed subset) under <paramref name="destDir"/>.</summary>
-    public static void BuildUpdate(string destDir, string fir, string cycle)
+    public static void BuildUpdate(string destDir, string fir, string cycle, int cycleRevision = 1)
     {
         fir = fir.ToUpperInvariant();
-        var sct = SectorBase(fir, cycle);
+        var sct = SectorBase(fir, cycle, cycleRevision);
+        cycle = Tag(cycle, cycleRevision);
 
         // Update ships new versioned sector files + copyright, but NO .prf.
         Write(destDir, $"{sct}.sct", $"SECTOR {fir} {cycle}");

@@ -15,8 +15,10 @@ public sealed partial class FirItemViewModel : ObservableObject
     public string Name => Fir.Name;
 
     [ObservableProperty] private InstallStatus _status = InstallStatus.NotInstalled;
-    [ObservableProperty] private AiracCycle? _installedAirac;
-    [ObservableProperty] private AiracCycle? _availableAirac;
+    /// <summary>Installed version; shown as "2608", or "2608/2" for an AeroNav same-cycle re-issue.</summary>
+    [ObservableProperty] private SectorVersion? _installedVersion;
+    /// <summary>Newest version the catalog offers for this FIR.</summary>
+    [ObservableProperty] private SectorVersion? _availableVersion;
     [ObservableProperty] private bool _busy;
 
     public FirItemViewModel(Fir fir, Func<FirItemViewModel, OperationKind, Task> run)
@@ -37,7 +39,7 @@ public sealed partial class FirItemViewModel : ObservableObject
         InstallStatus.UpdateAvailable => Loc.T("Fir_UpdateAvailable"),
         InstallStatus.LocallyModified => Loc.T("Fir_LocallyModified"),
         InstallStatus.InstallationIncomplete => Loc.T("Fir_Incomplete"),
-        InstallStatus.InstalledVersionUnknown when InstalledAirac is not null => string.Format(Loc.T("Fir_InstalledAirac"), InstalledAirac),
+        InstallStatus.InstalledVersionUnknown when InstalledVersion is { } v => string.Format(Loc.T("Fir_InstalledAirac"), v.Label),
         _ => Loc.T("Fir_VersionUnknown"),
     };
 
@@ -52,8 +54,8 @@ public sealed partial class FirItemViewModel : ObservableObject
         _ => "muted",
     };
 
-    public string InstalledText => InstalledAirac is { } a ? a.ToString() : "—";
-    public string AvailableText => AvailableAirac is { } a ? a.ToString() : "—";
+    public string InstalledText => InstalledVersion is { } v ? v.Label : "—";
+    public string AvailableText => AvailableVersion is { } v ? v.Label : "—";
 
     // Button rules:
     //  • "Instalar" appears ONLY when nothing is installed for this FIR.

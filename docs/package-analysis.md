@@ -145,3 +145,19 @@ changes packaging). The engine additionally treats the versioned sector files sp
    update; handled by comparing full `AIRAC-REV-TS`).
 4. Package `.7z` compression method variants across FIRs (only LZMA-family observed; the extractor
    uses SharpCompress which covers the 7z method set AeroNav is known to use).
+
+## Same-cycle re-issues (`RR`)
+
+AeroNav's operations team sometimes re-publishes a package inside the same AIRAC cycle, bumping the
+`RR` pair of the `YYNNRR` field (`260801` → `260802`). The app treats this as a newer version end to end:
+
+- `PackageName.Version` / `SectorVersion` = (cycle, cycle revision `RR`, package revision), ordered in
+  that priority (`SectorVersion.Rank`). The catalog picks the highest (`RemoteCatalog.Best`/`BestVersion`).
+- The installed version is read from the stamped `.sct` on disk (`SectorFiles.InferInstalledVersion`),
+  and the scanner flags `UpdateAvailable` when the published version ranks higher, even within the same
+  cycle. A manifest only describes the install when it matches the disk's cycle AND `RR`; when it does,
+  its package revision is honoured so a re-packed release is not offered again after being installed.
+- Display: `2608` for a cycle's first issue, `2608/2` for a re-issue (the package revision is never shown).
+- The update itself needs nothing special: stale stamped sector files are dropped by base name and the
+  `.prf` files are re-pointed to the new `.sct`, exactly as for a new cycle.
+

@@ -101,7 +101,11 @@ public sealed record PackageName
 
     /// <summary>Identifying info parsed from a versioned sector (.sct/.ese/.rwy) file name.</summary>
     public readonly record struct SectorFile(string Fir, string Extension, DateTime BuildTimestampUtc,
-        AiracCycle Airac, int CycleRevision, int PackageRevision);
+        AiracCycle Airac, int CycleRevision, int PackageRevision)
+    {
+        /// <summary>Full version (cycle, within-cycle revision, package revision) carried by the file name.</summary>
+        public SectorVersion Version => new(Airac, CycleRevision, PackageRevision);
+    }
 
     /// <summary>Try to parse a versioned sector file name.</summary>
     public static bool TryParseSectorFile(string? fileName, out SectorFile result)
@@ -133,9 +137,12 @@ public sealed record PackageName
         return AiracCycle.TryParse(m.Groups["airac"].Value, out airac);
     }
 
+    /// <summary>Full version (cycle, within-cycle revision, package revision) carried by the name.</summary>
+    public SectorVersion Version => new(Airac, CycleRevision, PackageRevision);
+
     /// <summary>
-    /// Total ordering key that distinguishes even same-cycle rebuilds:
-    /// AIRAC cycle, then cycle revision, then package revision, then build timestamp.
+    /// Total ordering key that distinguishes even same-cycle re-issues:
+    /// AIRAC cycle, then cycle revision (RR), then package revision.
     /// </summary>
-    public long VersionRank => ((long)Airac.Value * 100 + CycleRevision) * 10000 + PackageRevision;
+    public long VersionRank => Version.Rank;
 }

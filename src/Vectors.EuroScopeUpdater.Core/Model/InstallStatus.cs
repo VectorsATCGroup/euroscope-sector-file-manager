@@ -34,6 +34,12 @@ public sealed record LocalFirState(
     bool HasManifest,
     IReadOnlyList<string> ModifiedFiles)
 {
+    /// <summary>Full installed version (cycle, within-cycle revision, package revision) when known.</summary>
+    public SectorVersion? InstalledVersion { get; init; }
+
+    /// <summary>Newest version the catalog offers for this FIR (null when no catalog was given).</summary>
+    public SectorVersion? AvailableVersion { get; init; }
+
     public static LocalFirState NotInstalled(string fir) =>
         new(fir, InstallStatus.NotInstalled, null, false, Array.Empty<string>());
 }
