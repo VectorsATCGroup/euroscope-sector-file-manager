@@ -27,6 +27,12 @@ public sealed class ApplicationSettings
     /// <summary>UI language: "Pt" (default) or "En".</summary>
     public string Language { get; set; } = "Pt";
 
+    /// <summary>
+    /// Check the project's GitHub Releases feed for a newer version at startup (default on). The check
+    /// sends no personal data; it only reads the public "latest release" metadata.
+    /// </summary>
+    public bool CheckForUpdates { get; set; } = true;
+
     public bool IsComplete =>
         !string.IsNullOrWhiteSpace(EuroScopePath) &&
         !string.IsNullOrWhiteSpace(SectorFilesPath) &&

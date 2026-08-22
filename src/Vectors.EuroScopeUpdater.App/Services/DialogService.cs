@@ -1,6 +1,8 @@
 using System.IO;
 using System.Windows;
 using Microsoft.Win32;
+using Vectors.EuroScopeUpdater.App.ViewModels;
+using Vectors.EuroScopeUpdater.App.Views;
 
 namespace Vectors.EuroScopeUpdater.App.Services;
 
@@ -10,6 +12,9 @@ public interface IDialogService
     void Error(string title, string message);
     bool Confirm(string title, string message);
     string? PickFolder(string description, string? initialDirectory = null);
+
+    /// <summary>Show the "new version available" dialog (modal, owned by the main window).</summary>
+    void ShowUpdate(UpdateViewModel update);
 }
 
 public sealed class DialogService : IDialogService
@@ -29,5 +34,14 @@ public sealed class DialogService : IDialogService
         if (!string.IsNullOrWhiteSpace(initialDirectory) && Directory.Exists(initialDirectory))
             dlg.InitialDirectory = initialDirectory;
         return dlg.ShowDialog() == true ? dlg.FolderName : null;
+    }
+
+    public void ShowUpdate(UpdateViewModel update)
+    {
+        var owner = Application.Current?.MainWindow;
+        var dialog = new UpdateDialog(update);
+        if (owner is { IsLoaded: true }) dialog.Owner = owner;
+        else dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        dialog.ShowDialog();
     }
 }

@@ -37,6 +37,11 @@ WizardStyle=modern
 UninstallDisplayName={#AppName}
 ArchitecturesInstallIn64BitMode=x64compatible
 ArchitecturesAllowed=x64compatible
+; A running copy of the app (including an invisible leftover instance from an older version) holds the
+; program files open; let Setup close it via the Restart Manager instead of failing or prompting.
+CloseApplications=yes
+CloseApplicationsFilter=*.exe,*.dll
+RestartApplications=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -64,6 +69,8 @@ Type: dirifempty; Name: "{localappdata}\Programs\Vectors ATC Group"
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "Launch {#AppShortName}"; Flags: nowait postinstall skipifsilent
+; In-app self-update runs Setup silently with /RELAUNCH=1 so the new version starts again automatically.
+Filename: "{app}\{#AppExe}"; Flags: nowait; Check: RelaunchRequested
 
 [Code]
 // The per-user (and, if ever elevated, per-machine) uninstall registry key Inno writes for this AppId.
@@ -76,6 +83,14 @@ var
   ExistingUninstaller: String;
   ActionPage: TInputOptionWizardPage;
   UninstallAndExit: Boolean;
+
+// ── Self-update hand-off ─────────────────────────────────────────────────────
+// The app launches this installer with /RELAUNCH=1 (plus /SILENT etc.) when the user accepts an update;
+// the [Run] entry guarded by this function starts the freshly installed version when Setup finishes.
+function RelaunchRequested: Boolean;
+begin
+  Result := ExpandConstant('{param:RELAUNCH|0}') = '1';
+end;
 
 // ── WebView2 runtime ─────────────────────────────────────────────────────────
 // Detect the Evergreen WebView2 runtime (per-machine or per-user).

@@ -57,6 +57,24 @@ Observed indirectly (a real installation and packages exist, and the public page
 surfaced as `AeroNavAuthRequired`, which the UI turns into a friendly "session expired → Authenticate"
 prompt rather than a technical error, then resumes the pending action.
 
+**How the live implementation judges the session (confirmed in production):**
+
+- Being on an `aero-nav.com` URL proves nothing: the pre-login page lives at the same host and path
+  (`files.aero-nav.com/SBXX`). The only reliable "authenticated" signal is the package listing actually
+  rendering in the DOM (links matching `<FIR>/(Install|Update)-Package_….7z`), which AeroNav injects via
+  JavaScript after navigation completes. Every check therefore polls the DOM instead of reading it once.
+- "Logged out" is recognised three ways: a redirect to a sign-in host (VATSIM Connect / Navigraph /
+  `auth`/`sso`/`login` hosts), the AeroNav page showing a sign-in link/form and no packages after a short
+  grace period, or no listing at all within the timeout. The silent startup check is bounded (~15 s) and
+  the dashboard shows a "checking saved session" banner with **Authenticate** available meanwhile.
+- `IsAuthenticated` is re-validated, not trusted forever: the listing is reloaded on every refresh
+  (reused only for a minute right after sign-in), and a download that never starts after clicking its
+  link is treated as an expired session.
+- The session persists across launches only because the WebView2 user-data folder is a stable
+  per-user folder and the app shuts down cleanly (`ShutdownMode=OnMainWindowClose`, browser disposed on
+  exit, single instance). A process left running invisibly would keep that profile open and make
+  persistence unreliable, which is exactly the bug fixed in the release after 1.0.3.
+
 ## Catalog discovery — **Inferred, must be confirmed against the live page**
 
 The parser is written against a stable, *semantic* reading of the listing rather than brittle generated

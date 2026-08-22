@@ -14,6 +14,19 @@ using Vectors.EuroScopeUpdater.Core.Settings;
 
 namespace Vectors.EuroScopeUpdater.App.ViewModels;
 
+/// <summary>Where the dashboard stands with respect to the AeroNav session.</summary>
+public enum AuthState
+{
+    /// <summary>The package source needs no authentication (offline fixtures).</summary>
+    NotRequired,
+    /// <summary>Silently checking whether a saved session is still valid (no window shown).</summary>
+    Checking,
+    /// <summary>No valid session: tools are gated until the user signs in.</summary>
+    Required,
+    /// <summary>Signed in; the catalog can be loaded and tools are available.</summary>
+    Authenticated,
+}
+
 /// <summary>Main screen: FIR list with status, contextual install/update actions and a progress overlay.</summary>
 public sealed partial class DashboardViewModel : ObservableObject
 {
@@ -30,13 +43,16 @@ public sealed partial class DashboardViewModel : ObservableObject
     private readonly Division _division = Division.VatsimBrasil;
     private readonly IAuthenticatingSource? _auth;
     private CancellationTokenSource? _operationCts;
+    private CancellationTokenSource? _restoreCts;
+    private Task<bool>? _restoreTask;
+    private bool _authInProgress;
 
     public ObservableCollection<FirItemViewModel> Firs { get; } = new();
     public OperationViewModel Operation { get; } = new();
 
     [ObservableProperty] private string _airacText = "—";
     [ObservableProperty] private bool _busy;
-    [ObservableProperty] private bool _needsAuth;
+    [ObservableProperty] private AuthState _authState;
     [ObservableProperty] private string? _statusMessage;
 
     public string DivisionName => _division.Name;
@@ -57,22 +73,40 @@ public sealed partial class DashboardViewModel : ObservableObject
         _nav = nav;
         _log = log;
         _auth = source as IAuthenticatingSource;
+        _authState = _auth is null ? AuthState.NotRequired
+            : _auth.IsAuthenticated ? AuthState.Authenticated : AuthState.Required;
 
         foreach (var fir in _division.Firs)
-            Firs.Add(new FirItemViewModel(fir, RunOperationAsync));
+            Firs.Add(new FirItemViewModel(fir, (item, kind) => RunOperationAsync(item, kind)));
 
         _ = RefreshAsync();
     }
+
+    private static Localization Loc => Localization.Instance;
 
     /// <summary>The source requires an authenticated session before any tool can be used.</summary>
     public bool RequiresAuth => _auth is not null;
     private bool Authenticated => _auth?.IsAuthenticated ?? true;
 
+    /// <summary>The authentication banner is shown while checking a saved session and while sign-in is required.</summary>
+    public bool NeedsAuth => AuthState is AuthState.Checking or AuthState.Required;
+
+    /// <summary>True while the saved session is being verified silently.</summary>
+    public bool AuthChecking => AuthState == AuthState.Checking;
+
     /// <summary>True while the app is gated behind authentication (blocks all tools).</summary>
     public bool ToolsEnabled => !NeedsAuth;
 
+    /// <summary>The Authenticate button stays available during the silent check (it simply skips ahead to sign-in).</summary>
+    public bool CanAuthenticate => !_authInProgress;
+
     partial void OnBusyChanged(bool value) => UpdateAllCommand.NotifyCanExecuteChanged();
-    partial void OnNeedsAuthChanged(bool value) => OnPropertyChanged(nameof(ToolsEnabled));
+    partial void OnAuthStateChanged(AuthState value)
+    {
+        OnPropertyChanged(nameof(NeedsAuth));
+        OnPropertyChanged(nameof(AuthChecking));
+        OnPropertyChanged(nameof(ToolsEnabled));
+    }
 
     private string FirDir(string fir) => Path.Combine(SectorFilesPath, fir);
 
@@ -82,31 +116,55 @@ public sealed partial class DashboardViewModel : ObservableObject
     [RelayCommand]
     private async Task RefreshAsync()
     {
-        // Gate: without an authenticated session the tools stay blocked and we do NOT contact AeroNav.
+        if (Busy || _authInProgress || _restoreTask is not null) return;
+
+        // Gate: without an authenticated session the tools stay blocked and we do NOT contact AeroNav
+        // beyond a silent check of the saved session (no window shown). The login UI only appears when
+        // the session is actually gone/expired, or when the user clicks Authenticate to skip the wait.
         if (RequiresAuth && !Authenticated)
         {
-            // First try to silently restore a persisted session (no window shown). The login UI only
-            // appears if the session is actually gone/expired.
-            Busy = true;
-            StatusMessage = Localization.Instance.T("Auth_Checking");
-            var restored = false;
-            try { restored = await Task.Run(() => _auth!.TryRestoreSessionAsync()); }
-            catch { /* treat as not authenticated */ }
-            Busy = false;
+            AuthState = AuthState.Checking;
             StatusMessage = null;
+            await RescanAsync(); // show what is installed right away, even before the check finishes
+
+            var restored = false;
+            _restoreCts = new CancellationTokenSource();
+            try
+            {
+                _restoreTask = _auth!.TryRestoreSessionAsync(_restoreCts.Token);
+                restored = await _restoreTask;
+            }
+            catch (OperationCanceledException)
+            {
+                return; // the user clicked Authenticate; that flow takes over from here
+            }
+            catch (Exception ex)
+            {
+                _log.LogWarning(ex, "silent session check failed");
+            }
+            finally
+            {
+                _restoreCts.Dispose();
+                _restoreCts = null;
+                _restoreTask = null;
+            }
 
             if (!restored)
             {
-                NeedsAuth = true;
-                await RescanAsync(); // local-only status behind the gate
+                AuthState = AuthState.Required;
                 return;
             }
-            NeedsAuth = false;
         }
 
+        AuthState = RequiresAuth ? AuthState.Authenticated : AuthState.NotRequired;
+        await LoadCatalogAsync();
+    }
+
+    /// <summary>Load the remote catalog (requires a valid session) and recompute every FIR's status.</summary>
+    private async Task LoadCatalogAsync()
+    {
         Busy = true;
-        NeedsAuth = false;
-        StatusMessage = "Carregando pacotes disponíveis…";
+        StatusMessage = Loc.T("Dash_LoadingPackages");
         try
         {
             _catalog = await Task.Run(() => _source.GetCatalogAsync(_division));
@@ -115,13 +173,17 @@ public sealed partial class DashboardViewModel : ObservableObject
         }
         catch (AeroNavAuthRequiredException)
         {
-            NeedsAuth = true;
-            StatusMessage = "Sua sessão do AeroNav expirou. Autentique-se novamente para continuar.";
+            _catalog = null;
+            AiracText = "—";
+            AuthState = AuthState.Required;
+            StatusMessage = Loc.T("Dash_SessionExpired");
         }
         catch (Exception ex)
         {
             _log.LogWarning(ex, "catalog load failed");
-            StatusMessage = "Não foi possível acessar o AeroNav. Exibindo apenas o status local.";
+            _catalog = null;
+            AiracText = "—";
+            StatusMessage = Loc.T("Dash_SourceUnavailable");
         }
 
         await RescanAsync();
@@ -148,26 +210,49 @@ public sealed partial class DashboardViewModel : ObservableObject
     private async Task AuthenticateAsync()
     {
         if (_auth is null) { await RefreshAsync(); return; }
-        Busy = true;
-        StatusMessage = "Abrindo o login oficial do AeroNav…";
+        if (_authInProgress) return;
+        _authInProgress = true;
+        OnPropertyChanged(nameof(CanAuthenticate));
         try
         {
+            // Stop a silent session check that may still be running: we are going interactive now.
+            _restoreCts?.Cancel();
+            if (_restoreTask is { } pending)
+            {
+                try { await pending; } catch { /* cancelled or failed, either way we proceed */ }
+            }
+
+            // The silent check may have just succeeded in the meantime: nothing to sign in to.
+            if (_auth.IsAuthenticated)
+            {
+                AuthState = AuthState.Authenticated;
+                StatusMessage = null;
+                if (!Busy && _catalog is null) await LoadCatalogAsync();
+                return;
+            }
+
+            AuthState = AuthState.Required;
+            StatusMessage = Loc.T("Dash_OpeningLogin");
             await _auth.AuthenticateAsync();
-            NeedsAuth = false;
-            Busy = false;
-            await RefreshAsync();
+            AuthState = AuthState.Authenticated;
+            StatusMessage = null;
+            await LoadCatalogAsync();
         }
         catch (AeroNavAuthRequiredException)
         {
-            NeedsAuth = true;
-            StatusMessage = "A autenticação não foi concluída. Clique em Autenticar para tentar novamente.";
-            Busy = false;
+            AuthState = AuthState.Required;
+            StatusMessage = Loc.T("Dash_AuthNotCompleted");
         }
         catch (Exception ex)
         {
             _log.LogWarning(ex, "authentication failed");
-            StatusMessage = $"Falha na autenticação: {ex.Message}";
-            Busy = false;
+            AuthState = AuthState.Required;
+            StatusMessage = string.Format(Loc.T("Dash_AuthFailed"), ex.Message);
+        }
+        finally
+        {
+            _authInProgress = false;
+            OnPropertyChanged(nameof(CanAuthenticate));
         }
     }
 
@@ -178,10 +263,13 @@ public sealed partial class DashboardViewModel : ObservableObject
     {
         // Sequential — never run parallel destructive operations over the same tree.
         foreach (var item in Firs.Where(f => f.CanUpdate).ToList())
+        {
             await RunOperationAsync(item, OperationKind.Update);
+            if (AuthState == AuthState.Required) break; // session gone: stop instead of failing every FIR
+        }
     }
 
-    private async Task RunOperationAsync(FirItemViewModel item, OperationKind kind)
+    private async Task RunOperationAsync(FirItemViewModel item, OperationKind kind, bool isRetry = false)
     {
         if (Busy) return;
 
@@ -209,12 +297,13 @@ public sealed partial class DashboardViewModel : ObservableObject
         Busy = true;
         item.Busy = true;
         item.Refreshed();
-        Operation.Reset(string.Format(Localization.Instance.T(kind == OperationKind.Update ? "Op_Updating" : "Op_Installing"), item.Code));
+        Operation.Reset(string.Format(Loc.T(kind == OperationKind.Update ? "Op_Updating" : "Op_Installing"), item.Code));
         Operation.IsVisible = true;
 
         var progress = new Progress<OperationProgress>(Operation.Update);
         var request = new InstallRequest(item.Fir, kind, package, FirDir(item.Code), SectorFilesPath);
         _operationCts = new CancellationTokenSource();
+        var sessionExpired = false;
 
         try
         {
@@ -223,6 +312,8 @@ public sealed partial class DashboardViewModel : ObservableObject
             if (result.Success)
                 _dialogs.Info($"{item.Code} pronto",
                     $"{item.Code} {(kind == OperationKind.Update ? "atualizado" : "instalado")} com sucesso.\n\n{result.Message}");
+            else if (result.Error is AeroNavAuthRequiredException)
+                sessionExpired = true; // handled below, after the operation state is cleaned up
             else if (result.RolledBack)
                 _dialogs.Error($"{item.Code} sem alterações", result.Message ?? "A operação falhou e foi revertida.");
             else if (result.RollbackFailed)
@@ -249,13 +340,46 @@ public sealed partial class DashboardViewModel : ObservableObject
             Busy = false;
             await RescanAsync();
         }
+
+        if (sessionExpired)
+            await HandleSessionExpiredAsync(item, kind, isRetry);
+    }
+
+    /// <summary>
+    /// The AeroNav session died underneath an operation (nothing was changed on disk). Gate the tools,
+    /// offer to sign in right now and, once signed in, retry that same operation once.
+    /// </summary>
+    private async Task HandleSessionExpiredAsync(FirItemViewModel item, OperationKind kind, bool isRetry)
+    {
+        AuthState = AuthState.Required;
+        StatusMessage = Loc.T("Dash_SessionExpired");
+        _log.LogInformation("[{Fir}] operation needs re-authentication (retry={IsRetry})", item.Code, isRetry);
+
+        if (isRetry || _auth is null)
+        {
+            _dialogs.Error(Loc.T("Dash_SessionExpiredTitle"), Loc.T("Dash_SessionExpired"));
+            return;
+        }
+
+        var signIn = _dialogs.Confirm(Loc.T("Dash_SessionExpiredTitle"),
+            string.Format(Loc.T("Dash_SessionExpiredRetry"), item.Code));
+        if (!signIn) return;
+
+        await AuthenticateAsync(); // reloads the catalog and every FIR status when it succeeds
+        if (AuthState != AuthState.Authenticated) return;
+
+        var again = Firs.FirstOrDefault(f => f.Code == item.Code);
+        if (again is null) return;
+        var stillApplies = kind == OperationKind.Update ? again.CanUpdate : again.CanInstall;
+        if (stillApplies)
+            await RunOperationAsync(again, kind, isRetry: true);
     }
 
     [RelayCommand]
     private void CancelOperation()
     {
         _operationCts?.Cancel();
-        Operation.PhaseText = Localization.Instance.T("Op_Cancelling");
+        Operation.PhaseText = Loc.T("Op_Cancelling");
         Operation.CanCancel = false;
     }
 }

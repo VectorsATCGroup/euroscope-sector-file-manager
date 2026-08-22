@@ -90,6 +90,62 @@ public sealed partial class Localization : ObservableObject
         ["Dash_Gate_Body"] = (
             "Para instalar ou atualizar os Sector Files, entre nos serviços oficiais do AeroNav. Suas credenciais nunca são vistas nem armazenadas por este aplicativo.",
             "To install or update Sector Files, sign in to the official AeroNav services. Your credentials are never seen or stored by this app."),
+        ["Dash_Gate_Checking_Title"] = ("Verificando sessão salva…", "Checking saved session…"),
+        ["Dash_Gate_Checking_Body"] = (
+            "Conferindo se a sua sessão do AeroNav ainda é válida. Se preferir, clique em Autenticar para entrar agora mesmo.",
+            "Checking whether your AeroNav session is still valid. If you prefer, click Authenticate to sign in right away."),
+        ["Dash_LoadingPackages"] = ("Carregando pacotes disponíveis…", "Loading available packages…"),
+        ["Dash_SessionExpired"] = (
+            "Sua sessão do AeroNav expirou. Autentique-se novamente para continuar.",
+            "Your AeroNav session has expired. Sign in again to continue."),
+        ["Dash_SourceUnavailable"] = (
+            "Não foi possível acessar o AeroNav. Exibindo apenas o status local.",
+            "Could not reach AeroNav. Showing local status only."),
+        ["Dash_OpeningLogin"] = ("Abrindo o login oficial do AeroNav…", "Opening the official AeroNav sign-in…"),
+        ["Dash_AuthNotCompleted"] = (
+            "A autenticação não foi concluída. Clique em Autenticar para tentar novamente.",
+            "Sign-in was not completed. Click Authenticate to try again."),
+        ["Dash_AuthFailed"] = ("Falha na autenticação: {0}", "Authentication failed: {0}"),
+        ["Dash_SessionExpiredTitle"] = ("Sessão expirada", "Session expired"),
+        ["Dash_SessionExpiredRetry"] = (
+            "Sua sessão do AeroNav expirou e a operação em {0} não foi iniciada (nada foi alterado). Deseja autenticar agora e tentar novamente?",
+            "Your AeroNav session has expired and the operation on {0} did not start (nothing was changed). Sign in now and try again?"),
+
+        // ── Update notification ─────────────────────────────────────────────────
+        ["Upd_Title"] = ("Nova versão disponível", "New version available"),
+        ["Upd_Body"] = (
+            "A versão {0} do EuroScope Sector File Manager está disponível. Você está usando a versão {1}.",
+            "Version {0} of EuroScope Sector File Manager is available. You are using version {1}."),
+        ["Upd_Notes"] = ("NOVIDADES", "WHAT'S NEW"),
+        ["Upd_InstallNow"] = ("Atualizar agora", "Update now"),
+        ["Upd_Later"] = ("Depois", "Later"),
+        ["Upd_ViewOnGitHub"] = ("Ver no GitHub", "View on GitHub"),
+        ["Upd_Downloading"] = ("Baixando o instalador… {0}", "Downloading the installer… {0}"),
+        ["Upd_Verifying"] = ("Verificando o instalador…", "Verifying the installer…"),
+        ["Upd_Launching"] = (
+            "Download concluído. O instalador vai abrir e o aplicativo será reiniciado na nova versão.",
+            "Download complete. The installer will open and the app will restart on the new version."),
+        ["Upd_Failed"] = ("Não foi possível baixar a atualização: {0}", "Could not download the update: {0}"),
+        ["Upd_Cancelled"] = ("Download cancelado.", "Download cancelled."),
+        ["Upd_NoInstaller"] = (
+            "Esta versão não tem um instalador publicado. Abra a página no GitHub para baixar manualmente.",
+            "This version has no published installer. Open the GitHub page to download it manually."),
+        ["Upd_BannerText"] = ("Nova versão {0} disponível", "New version {0} available"),
+        ["Upd_BannerAction"] = ("Atualizar", "Update"),
+
+        // ── Settings: updates ───────────────────────────────────────────────────
+        ["Set_Updates"] = ("ATUALIZAÇÕES", "UPDATES"),
+        ["Set_Updates_Desc"] = (
+            "Ao iniciar, o aplicativo consulta a página pública de releases do projeto no GitHub para avisar quando houver uma nova versão. Nenhum dado pessoal é enviado.",
+            "At startup the app reads the project's public GitHub releases page to let you know when a new version is available. No personal data is sent."),
+        ["Set_Updates_Auto"] = ("Verificar automaticamente ao iniciar", "Check automatically at startup"),
+        ["Set_Updates_CheckNow"] = ("Verificar agora", "Check now"),
+        ["Set_Updates_Checking"] = ("Verificando…", "Checking…"),
+        ["Set_Updates_UpToDate"] = ("Você está na versão mais recente ({0}).", "You are on the latest version ({0})."),
+        ["Set_Updates_Available"] = ("Nova versão {0} disponível.", "New version {0} available."),
+        ["Set_Updates_Unavailable"] = ("Não foi possível verificar agora. Tente novamente mais tarde.", "Could not check right now. Try again later."),
+        ["Common_On"] = ("Ativado", "On"),
+        ["Common_Off"] = ("Desativado", "Off"),
 
         // ── FIR status / actions ────────────────────────────────────────────────
         ["Fir_NotInstalled"] = ("Não instalado", "Not installed"),
@@ -153,6 +209,10 @@ public sealed partial class Localization : ObservableObject
         ["Set_How_Storage"] = (
             "Somente configurações técnicas são armazenadas localmente no seu computador: caminhos de instalação, versões dos pacotes instalados, tema e idioma. A sessão do AeroNav (cookies) é mantida em um perfil de navegador isolado, separado do seu navegador, apenas para evitar que você precise entrar toda vez. Nada disso é enviado para servidores do Vectors.",
             "Only technical settings are stored locally on your computer: installation paths, installed package versions, theme and language. The AeroNav session (cookies) is kept in an isolated browser profile, separate from your own browser, only so you don't have to sign in every time. None of this is ever sent to any Vectors server."),
+        ["Set_How_Updates_H"] = ("Verificação de atualizações", "Update check"),
+        ["Set_How_Updates"] = (
+            "Ao iniciar, o aplicativo lê a página pública de releases do projeto no GitHub (api.github.com) para saber se existe uma versão mais nova. Essa consulta não envia nenhum dado pessoal, apenas o nome e a versão do aplicativo, e pode ser desativada em Configurações. Quando você aceita atualizar, o instalador oficial é baixado do próprio repositório do projeto e verificado (SHA-256) antes de ser executado.",
+            "At startup the app reads the project's public GitHub releases page (api.github.com) to learn whether a newer version exists. That request sends no personal data, only the app's name and version, and can be turned off in Settings. When you accept an update, the official installer is downloaded from the project's own repository and verified (SHA-256) before it runs."),
         ["Set_How_NoCollect"] = (
             "Este aplicativo NÃO coleta credenciais nem dados pessoais. Sem telemetria, sem analytics, sem anúncios. Os Sector Files permanecem hospedados e distribuídos pelo provedor oficial (AeroNav).",
             "This application does NOT collect credentials or personal data. No telemetry, no analytics, no advertising. Sector Files remain hosted and distributed by their official provider (AeroNav)."),
